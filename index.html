@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>世界首都大挑戰 (全球完整版)</title>
+    <style>
+        :root {
+            /* 地理/地球風格配色 */
+            --primary: #0277bd;   /* 海洋藍 */
+            --secondary: #29b6f6; /* 天空藍 */
+            --accent: #fbc02d;    /* 金黃獎牌 */
+            --bg: #f5f7fa;        /* 雲朵灰白 */
+            --text: #37474f;      /* 岩石深灰 */
+            --card-bg: #ffffff;
+            
+            /* 地區標籤顏色 */
+            --reg-asia: #e53935;    /* 亞：紅 */
+            --reg-europe: #1e88e5;  /* 歐：藍 */
+            --reg-americas: #43a047;/* 美：綠 */
+            --reg-oceania: #fb8c00; /* 洋：橘 */
+            --reg-africa: #8e24aa;  /* 非：紫 */
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0; padding: 0; padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            background: linear-gradient(135deg, #01579b, #0288d1);
+            color: white;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky; top: 0; z-index: 100;
+        }
+        h1 { margin: 0; font-size: 1.6rem; letter-spacing: 1px; }
+        .subtitle { font-size: 0.85rem; opacity: 0.9; margin-top: 6px; }
+
+        /* --- Navigation --- */
+        .nav {
+            display: flex; justify-content: flex-start;
+            gap: 10px; padding: 10px 15px;
+            background: white; border-bottom: 1px solid #cfd8dc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky; top: 82px; z-index: 90;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .nav::-webkit-scrollbar { display: none; }
+        
+        .nav-btn {
+            padding: 8px 18px; border: none; border-radius: 50px;
+            background: #eceff1; color: #546e7a; cursor: pointer;
+            font-weight: bold; transition: all 0.2s; 
+            font-size: 0.9rem; white-space: nowrap; flex-shrink: 0;
+        }
+        .nav-btn.active {
+            background: var(--primary); color: white;
+            box-shadow: 0 3px 6px rgba(2, 119, 189, 0.3);
+        }
+
+        .container { 
+            max-width: 1000px; margin: 0 auto; padding: 15px; min-height: 80vh;
+        }
+        .section { display: none; animation: fadeIn 0.3s ease-out; }
+        .section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Daily Card --- */
+        .daily-container { width: 100%; max-width: 480px; margin: 0 auto; text-align: center; }
+        .card-scene {
+            perspective: 1000px; width: 100%; height: min(550px, 60vh);
+            margin: 20px auto; position: relative;
+        }
+        .card-inner {
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            transform-style: preserve-3d;
+        }
+        .card-inner.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            overflow: hidden; background: white;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #29b6f6, #0277bd);
+            color: white; border: 4px solid #e1f5fe; z-index: 2; cursor: pointer;
+        }
+        .card-back {
+            transform: rotateY(180deg); padding: 0; justify-content: flex-start;
+            border: 1px solid #ddd; background: #fff; z-index: 1;
+        }
+        
+        .daily-img-wrapper { 
+            width: 100%; height: 50%; background: #eee; position: relative;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .daily-img { width: 100%; height: 100%; object-fit: cover; }
+        .daily-info-box { 
+            padding: 20px; text-align: left; height: 50%; 
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+
+        /* --- Grid & List --- */
+        .tools-bar {
+            background: white; padding: 15px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px;
+        }
+        .search-box {
+            width: 100%; padding: 10px; border: 2px solid #b3e5fc;
+            border-radius: 8px; font-size: 1rem; margin-bottom: 12px;
+        }
+        .filter-scroll { 
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; 
+            scrollbar-width: none;
+        }
+        .filter-tag {
+            padding: 6px 14px; border-radius: 15px; background: #eceff1;
+            border: 1px solid #b0bec5; cursor: pointer; font-size: 0.85rem;
+            color: #455a64; white-space: nowrap; flex-shrink: 0;
+        }
+        .filter-tag.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .plant-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; 
+        }
+        .plant-card {
+            background: white; border-radius: 10px; padding: 15px 10px; text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; 
+            border: 1px solid #f0f0f0; display: flex; flex-direction: column;
+            min-height: 110px;
+        }
+        .plant-card:active { transform: scale(0.98); background: #f9f9f9; }
+        .p-name { font-weight: bold; font-size: 1.05rem; color: var(--primary); margin-bottom: 5px; }
+        .p-cat { font-size: 0.85rem; color: #546e7a; margin-bottom: 8px; }
+        
+        .status-badge {
+            font-size: 0.7rem; color: white; padding: 3px 8px; border-radius: 10px;
+            display: inline-block; font-weight: bold; margin-top: auto; align-self: center;
+        }
+        .reg-asia { background: var(--reg-asia); }
+        .reg-europe { background: var(--reg-europe); }
+        .reg-americas { background: var(--reg-americas); }
+        .reg-oceania { background: var(--reg-oceania); }
+        .reg-africa { background: var(--reg-africa); }
+        .reg-other { background: #78909c; }
+
+        /* --- Quiz --- */
+        .quiz-panel {
+            background: white; padding: 25px 20px; border-radius: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center;
+            max-width: 600px; margin: 0 auto;
+        }
+        .q-media-box {
+            height: 200px; background: #fafafa; border: 2px dashed #b3e5fc;
+            border-radius: 12px; margin: 20px 0; display: flex;
+            align-items: center; justify-content: center; overflow: hidden;
+        }
+        .opt-btn {
+            width: 100%; padding: 14px; margin-bottom: 10px; background: white;
+            border: 2px solid #cfd8dc; border-radius: 10px; font-size: 1rem;
+            cursor: pointer; font-weight: bold; color: #37474f; transition: 0.2s;
+        }
+        .opt-btn:active { background: #eceff1; }
+        .opt-btn.correct { background: #c8e6c9; border-color: #66bb6a; color: #1b5e20; }
+        .opt-btn.wrong { background: #ffcdd2; border-color: #ef5350; color: #b71c1c; }
+
+        /* --- Modal --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 2000;
+            display: none; justify-content: center; align-items: center; padding: 15px;
+            backdrop-filter: blur(3px);
+        }
+        .modal-box {
+            background: white; width: 100%; max-width: 500px;
+            border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;
+            max-height: 85vh; animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .img-area { height: 35vh; background: #eee; display: flex; align-items: center; justify-content: center; }
+        .info-area { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid var(--primary);
+            border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (min-width: 768px) {
+            .container { padding: 30px; }
+            .nav { justify-content: center; top: 86px; }
+            .plant-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+            .img-area { height: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🌍 世界首都大挑戰</h1>
+    <div class="subtitle">全球 190+ 國家資料庫 (含陷阱題)</div>
+</header>
+
+<div class="nav">
+    <button class="nav-btn active" onclick="setTab('daily', this)">🔮 每日一國</button>
+    <button class="nav-btn" onclick="setTab('guide', this)">📖 首都圖鑑</button>
+    <button class="nav-btn" onclick="setTab('quiz', this)">🚩 首都測驗</button>
+</div>
+
+<div class="container">
+
+    <div id="sec-daily" class="section active">
+        <div class="daily-container">
+            <h2 style="color:var(--primary); margin:0 0 5px 0;">📅 今日國家</h2>
+            <p style="color:#78909c; font-size:0.9rem; margin-top:0;">每天認識一個新朋友</p>
+            
+            <div class="card-scene">
+                <div class="card-inner" id="daily-card-inner">
+                    <div class="card-face card-front" onclick="flipDailyCard()">
+                        <div style="font-size:4rem; margin-bottom:15px;">🗺️</div>
+                        <h2 style="letter-spacing:1px;">TODAY'S PICK</h2>
+                        <div style="background:rgba(0,0,0,0.1); padding:4px 12px; border-radius:20px; font-size:0.9rem;">
+                            <span id="daily-date-display">...</span>
+                        </div>
+                        <p style="opacity:0.9; margin-top:20px; font-size:0.9rem;">點擊翻開看答案</p>
+                    </div>
+                    
+                    <div class="card-face card-back">
+                        <div class="daily-img-wrapper" onclick="openModal(currentDailyCountry)">
+                            <img id="daily-img" class="daily-img" src="" alt="">
+                            <div class="loader" id="daily-loader" style="position:absolute;"></div>
+                        </div>
+                        <div class="daily-info-box">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <h2 id="daily-name" style="margin:0; color:var(--primary);"></h2>
+                                <span id="daily-region" class="status-badge"></span>
+                            </div>
+                            <div style="margin-top:10px;">
+                                <span style="color:#78909c;">首都：</span>
+                                <strong id="daily-capital" style="font-size:1.3rem; color:#e65100;"></strong>
+                            </div>
+                            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+                            <p id="daily-desc" style="color:#546e7a; font-size:0.9rem; line-height:1.6;">連線中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sec-guide" class="section">
+        <div class="tools-bar">
+            <input type="text" id="search-input" class="search-box" placeholder="搜尋國家或首都..." onkeyup="renderGuide()">
+            <div class="filter-scroll">
+                <div class="filter-tag active" onclick="setFilter('all', this)">全部</div>
+                <div class="filter-tag" onclick="setFilter('亞洲', this)">亞洲</div>
+                <div class="filter-tag" onclick="setFilter('歐洲', this)">歐洲</div>
+                <div class="filter-tag" onclick="setFilter('美洲', this)">美洲</div>
+                <div class="filter-tag" onclick="setFilter('大洋洲', this)">大洋洲</div>
+                <div class="filter-tag" onclick="setFilter('非洲', this)">非洲</div>
+            </div>
+            <div style="text-align:right; font-size:0.75rem; color:#90a4ae; margin-top:8px;">
+                收錄：<span id="db-count">0</span> 個國家/地區
+            </div>
+        </div>
+        <div id="guide-grid" class="plant-grid"></div>
+    </div>
+
+    <div id="sec-quiz" class="section">
+        <div id="quiz-menu" class="quiz-panel">
+            <h2 style="color:var(--primary);">🎓 全球首都大會考</h2>
+            <p style="color:#546e7a;">包含 195+ 個國家與容易混淆的陷阱城市。<br>你能答對幾題？</p>
+            <br>
+            <div style="font-size:3.5rem; margin-bottom:15px;">🏛️</div>
+            <button class="nav-btn" style="background:var(--primary); color:white; width:100%; padding:15px; font-size:1.1rem;" onclick="startQuiz()">
+                開始測驗
+            </button>
+        </div>
+
+        <div id="quiz-play" class="quiz-panel" style="display:none;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:bold; color:#90a4ae; font-size:0.9rem;">
+                <span id="q-progress">1 / 10</span>
+                <span>分數: <span id="q-score" style="color:var(--primary);">0</span></span>
+            </div>
+            
+            <h3 style="margin:5px 0; color:#37474f;">
+                <span id="q-country" style="color:var(--primary); font-size:1.4rem;"></span> 的首都是？
+            </h3>
+
+            <div class="q-media-box">
+                <div class="loader" id="v-loader"></div>
+                <img id="q-img" style="max-width:100%; max-height:100%; display:none;">
+            </div>
+
+            <div id="opt-container"></div>
+            <div id="feedback" style="height:25px; font-weight:bold; margin-top:5px;"></div>
+
+            <button id="next-btn" class="nav-btn" style="width:100%; background:var(--primary); color:white; margin-top:15px; display:none;" onclick="nextQuestion()">下一題 →</button>
+            <button onclick="quitQuiz()" style="background:none; border:none; margin-top:10px; color:#b0bec5; text-decoration:underline; font-size:0.9rem;">退出</button>
+        </div>
+
+        <div id="quiz-result" class="quiz-panel" style="display:none;">
+            <h2>🏆 測驗結果</h2>
+            <h1 id="final-score" style="font-size:4rem; margin:10px 0; color:var(--primary);">0</h1>
+            <div id="final-rank" style="background:var(--accent); color:#37474f; padding:5px 20px; border-radius:20px; font-weight:bold; display:inline-block;"></div>
+            <br><br>
+            <button class="nav-btn" onclick="quitQuiz()">返回主選單</button>
+        </div>
+    </div>
+
+</div>
+
+<div id="modal" class="modal" onclick="closeModal(event)">
+    <div class="modal-box">
+        <div class="img-area">
+            <div class="loader" id="m-loader"></div>
+            <img id="m-img" style="max-width:100%; max-height:100%; display:none;">
+            <div id="m-err" style="display:none; color:#78909c;">(無圖片)</div>
+        </div>
+        <div class="info-area">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <h2 id="m-name" style="margin:0; color:var(--primary);"></h2>
+                <span id="m-region" class="status-badge"></span>
+            </div>
+            <div style="font-size:1.1rem; color:#e65100; margin:10px 0; font-weight:bold;">
+                首都：<span id="m-capital"></span>
+            </div>
+            <p id="m-desc" style="line-height:1.6; color:#546e7a;">讀取中...</p>
+            <a id="m-wiki" href="#" target="_blank" style="display:block; text-align:center; margin-top:20px; padding:12px; background:#e1f5fe; color:var(--primary); text-decoration:none; border-radius:8px; font-weight:bold;">前往維基百科</a>
+        </div>
+        <button onclick="closeModal(null)" style="width:100%; padding:15px; border:none; background:#eceff1; font-weight:bold; color:#546e7a;">關閉</button>
+    </div>
+</div>
+
+<script>
+    // --- 全球國家與首都完整資料庫 ---
+    // confusing_cities 陣列為「非首都但易混淆的大城市」，用於生成誘答選項。
+    const countries = [
+        // === 亞洲 ===
+        { country: "日本", capital: "東京", region: "亞洲", confusing_cities: ["大阪", "京都", "橫濱"] },
+        { country: "中國", capital: "北京", region: "亞洲", confusing_cities: ["上海", "廣州", "深圳", "香港"] },
+        { country: "南韓", capital: "首爾", region: "亞洲", confusing_cities: ["釜山", "仁川", "大邱"] },
+        { country: "北韓", capital: "平壤", region: "亞洲", confusing_cities: ["開城"] },
+        { country: "泰國", capital: "曼谷", region: "亞洲", confusing_cities: ["清邁", "普吉島", "芭達雅"] },
+        { country: "越南", capital: "河內", region: "亞洲", confusing_cities: ["胡志明市", "峴港"] },
+        { country: "馬來西亞", capital: "吉隆坡", region: "亞洲", confusing_cities: ["檳城", "馬六甲", "新山"] },
+        { country: "新加坡", capital: "新加坡", region: "亞洲", confusing_cities: [] },
+        { country: "印尼", capital: "雅加達", region: "亞洲", confusing_cities: ["峇里島", "泗水", "萬隆"] },
+        { country: "菲律賓", capital: "馬尼拉", region: "亞洲", confusing_cities: ["宿霧", "達沃"] },
+        { country: "印度", capital: "新德里", region: "亞洲", confusing_cities: ["孟買", "加爾各答", "班加羅爾", "清奈"] },
+        { country: "土耳其", capital: "安卡拉", region: "亞洲", confusing_cities: ["伊斯坦堡", "伊茲密爾", "安塔利亞"] },
+        { country: "沙烏地阿拉伯", capital: "利雅德", region: "亞洲", confusing_cities: ["吉達", "麥加"] },
+        { country: "阿聯", capital: "阿布達比", region: "亞洲", confusing_cities: ["杜拜"] }, 
+        { country: "伊朗", capital: "德黑蘭", region: "亞洲", confusing_cities: ["伊斯法罕", "設拉子"] },
+        { country: "伊拉克", capital: "巴格達", region: "亞洲", confusing_cities: ["摩蘇爾", "巴士拉"] },
+        { country: "以色列", capital: "耶路撒冷", region: "亞洲", confusing_cities: ["特拉維夫", "海法"] },
+        { country: "巴基斯坦", capital: "伊斯蘭瑪巴德", region: "亞洲", confusing_cities: ["喀拉蚩", "拉合爾"] },
+        { country: "孟加拉", capital: "達卡", region: "亞洲", confusing_cities: ["吉大港"] },
+        { country: "尼泊爾", capital: "加德滿都", region: "亞洲", confusing_cities: ["波卡拉"] },
+        { country: "緬甸", capital: "奈比多", region: "亞洲", confusing_cities: ["仰光", "曼德勒"] },
+        { country: "柬埔寨", capital: "金邊", region: "亞洲", confusing_cities: ["暹粒"] },
+        { country: "寮國", capital: "永珍", region: "亞洲", confusing_cities: ["龍坡邦"] },
+        { country: "汶萊", capital: "斯里巴卡旺市", region: "亞洲", confusing_cities: [] },
+        { country: "東帝汶", capital: "帝力", region: "亞洲", confusing_cities: [] },
+        { country: "斯里蘭卡", capital: "斯里賈亞瓦德納普拉科特", region: "亞洲", confusing_cities: ["可倫坡"] }, // 可倫坡是商業首都
+        { country: "馬爾地夫", capital: "馬累", region: "亞洲", confusing_cities: [] },
+        { country: "蒙古", capital: "烏蘭巴托", region: "亞洲", confusing_cities: [] },
+        { country: "哈薩克", capital: "阿斯塔納", region: "亞洲", confusing_cities: ["阿拉木圖"] },
+        { country: "烏茲別克", capital: "塔什干", region: "亞洲", confusing_cities: ["撒馬爾罕"] },
+        { country: "吉爾吉斯", capital: "比什凱克", region: "亞洲", confusing_cities: [] },
+        { country: "塔吉克", capital: "杜尚別", region: "亞洲", confusing_cities: [] },
+        { country: "土庫曼", capital: "阿什哈巴德", region: "亞洲", confusing_cities: [] },
+        { country: "阿富汗", capital: "喀布爾", region: "亞洲", confusing_cities: ["坎大哈"] },
+        { country: "敘利亞", capital: "大馬士革", region: "亞洲", confusing_cities: ["阿勒坡"] },
+        { country: "約旦", capital: "安曼", region: "亞洲", confusing_cities: [] },
+        { country: "黎巴嫩", capital: "貝魯特", region: "亞洲", confusing_cities: [] },
+        { country: "科威特", capital: "科威特城", region: "亞洲", confusing_cities: [] },
+        { country: "卡達", capital: "杜哈", region: "亞洲", confusing_cities: [] },
+        { country: "巴林", capital: "麥納瑪", region: "亞洲", confusing_cities: [] },
+        { country: "阿曼", capital: "馬斯喀特", region: "亞洲", confusing_cities: [] },
+        { country: "葉門", capital: "沙那", region: "亞洲", confusing_cities: ["亞丁"] },
+        { country: "亞塞拜然", capital: "巴庫", region: "亞洲", confusing_cities: [] },
+        { country: "亞美尼亞", capital: "葉里溫", region: "亞洲", confusing_cities: [] },
+        { country: "喬治亞", capital: "提比里斯", region: "亞洲", confusing_cities: ["巴統"] },
+        { country: "不丹", capital: "辛布", region: "亞洲", confusing_cities: [] },
+
+        // === 歐洲 ===
+        { country: "英國", capital: "倫敦", region: "歐洲", confusing_cities: ["曼徹斯特", "愛丁堡", "伯明罕"] },
+        { country: "法國", capital: "巴黎", region: "歐洲", confusing_cities: ["馬賽", "里昂", "尼斯", "波爾多"] },
+        { country: "德國", capital: "柏林", region: "歐洲", confusing_cities: ["慕尼黑", "法蘭克福", "漢堡", "科隆"] },
+        { country: "義大利", capital: "羅馬", region: "歐洲", confusing_cities: ["米蘭", "威尼斯", "佛羅倫斯", "那不勒斯"] },
+        { country: "西班牙", capital: "馬德里", region: "歐洲", confusing_cities: ["巴塞隆納", "塞維亞", "瓦倫西亞"] },
+        { country: "荷蘭", capital: "阿姆斯特丹", region: "歐洲", confusing_cities: ["鹿特丹", "海牙", "烏特勒支"] },
+        { country: "比利時", capital: "布魯塞爾", region: "歐洲", confusing_cities: ["安特衛普", "布魯日"] },
+        { country: "瑞士", capital: "伯恩", region: "歐洲", confusing_cities: ["蘇黎世", "日內瓦", "巴塞爾", "洛桑"] },
+        { country: "奧地利", capital: "維也納", region: "歐洲", confusing_cities: ["薩爾斯堡", "格拉茲"] },
+        { country: "葡萄牙", capital: "里斯本", region: "歐洲", confusing_cities: ["波多"] },
+        { country: "希臘", capital: "雅典", region: "歐洲", confusing_cities: ["塞薩洛尼基", "聖托里尼"] },
+        { country: "俄羅斯", capital: "莫斯科", region: "歐洲", confusing_cities: ["聖彼得堡", "海參崴", "新西伯利亞"] },
+        { country: "瑞典", capital: "斯德哥爾摩", region: "歐洲", confusing_cities: ["哥得堡", "馬爾默"] },
+        { country: "挪威", capital: "奧斯陸", region: "歐洲", confusing_cities: ["卑爾根"] },
+        { country: "芬蘭", capital: "赫爾辛基", region: "歐洲", confusing_cities: ["坦佩雷"] },
+        { country: "丹麥", capital: "哥本哈根", region: "歐洲", confusing_cities: ["奧胡斯"] },
+        { country: "愛爾蘭", capital: "都柏林", region: "歐洲", confusing_cities: ["科克"] },
+        { country: "波蘭", capital: "華沙", region: "歐洲", confusing_cities: ["克拉科夫", "格但斯克"] },
+        { country: "捷克", capital: "布拉格", region: "歐洲", confusing_cities: ["布爾諾"] },
+        { country: "匈牙利", capital: "布達佩斯", region: "歐洲", confusing_cities: [] },
+        { country: "羅馬尼亞", capital: "布加勒斯特", region: "歐洲", confusing_cities: [] },
+        { country: "保加利亞", capital: "索菲亞", region: "歐洲", confusing_cities: [] },
+        { country: "塞爾維亞", capital: "貝爾格勒", region: "歐洲", confusing_cities: [] },
+        { country: "克羅埃西亞", capital: "薩格勒布", region: "歐洲", confusing_cities: ["杜布羅夫尼克"] },
+        { country: "烏克蘭", capital: "基輔", region: "歐洲", confusing_cities: ["敖德薩", "利沃夫"] },
+        { country: "白俄羅斯", capital: "明斯克", region: "歐洲", confusing_cities: [] },
+        { country: "冰島", capital: "雷克雅維克", region: "歐洲", confusing_cities: [] },
+        { country: "愛沙尼亞", capital: "塔林", region: "歐洲", confusing_cities: [] },
+        { country: "拉脫維亞", capital: "里加", region: "歐洲", confusing_cities: [] },
+        { country: "立陶宛", capital: "維爾紐斯", region: "歐洲", confusing_cities: [] },
+        { country: "斯洛伐克", capital: "布拉提斯拉瓦", region: "歐洲", confusing_cities: [] },
+        { country: "斯洛維尼亞", capital: "盧比安納", region: "歐洲", confusing_cities: [] },
+        { country: "波士尼亞", capital: "塞拉耶佛", region: "歐洲", confusing_cities: [] },
+        { country: "阿爾巴尼亞", capital: "地拉那", region: "歐洲", confusing_cities: [] },
+        { country: "北馬其頓", capital: "史高比耶", region: "歐洲", confusing_cities: [] },
+        { country: "蒙特內哥羅", capital: "波德里查", region: "歐洲", confusing_cities: [] },
+        { country: "賽普勒斯", capital: "尼可西亞", region: "歐洲", confusing_cities: [] },
+        { country: "盧森堡", capital: "盧森堡市", region: "歐洲", confusing_cities: [] },
+        { country: "摩納哥", capital: "摩納哥", region: "歐洲", confusing_cities: [] },
+        { country: "馬爾他", capital: "瓦萊塔", region: "歐洲", confusing_cities: [] },
+        { country: "梵蒂岡", capital: "梵蒂岡", region: "歐洲", confusing_cities: [] },
+        { country: "安道爾", capital: "安道爾城", region: "歐洲", confusing_cities: [] },
+        { country: "列支敦斯登", capital: "瓦都茲", region: "歐洲", confusing_cities: [] },
+        { country: "聖馬利諾", capital: "聖馬利諾", region: "歐洲", confusing_cities: [] },
+        { country: "摩爾多瓦", capital: "基希訥烏", region: "歐洲", confusing_cities: [] },
+
+        // === 美洲 ===
+        { country: "美國", capital: "華盛頓特區", region: "美洲", confusing_cities: ["紐約", "洛杉磯", "芝加哥", "舊金山", "西雅圖", "邁阿密"] },
+        { country: "加拿大", capital: "渥太華", region: "美洲", confusing_cities: ["多倫多", "溫哥華", "蒙特婁", "卡加利"] },
+        { country: "墨西哥", capital: "墨西哥城", region: "美洲", confusing_cities: ["坎昆", "瓜達拉哈拉", "提華納"] },
+        { country: "巴西", capital: "巴西利亞", region: "美洲", confusing_cities: ["里約熱內盧", "聖保羅", "薩爾瓦多"] },
+        { country: "阿根廷", capital: "布宜諾斯艾利斯", region: "美洲", confusing_cities: ["科爾多瓦", "羅薩里奧"] },
+        { country: "智利", capital: "聖地牙哥", region: "美洲", confusing_cities: ["瓦爾帕萊索"] },
+        { country: "哥倫比亞", capital: "波哥大", region: "美洲", confusing_cities: ["麥德林", "卡塔赫納"] },
+        { country: "秘魯", capital: "利馬", region: "美洲", confusing_cities: ["庫斯科", "阿雷基帕"] },
+        { country: "委內瑞拉", capital: "卡拉卡斯", region: "美洲", confusing_cities: [] },
+        { country: "古巴", capital: "哈瓦那", region: "美洲", confusing_cities: ["法拉德羅"] },
+        { country: "巴拿馬", capital: "巴拿馬城", region: "美洲", confusing_cities: [] },
+        { country: "哥斯大黎加", capital: "聖荷西", region: "美洲", confusing_cities: [] },
+        { country: "牙買加", capital: "京斯敦", region: "美洲", confusing_cities: [] },
+        { country: "厄瓜多", capital: "基多", region: "美洲", confusing_cities: ["瓜亞基爾"] },
+        { country: "玻利維亞", capital: "蘇克雷", region: "美洲", confusing_cities: ["拉巴斯"] }, // 拉巴斯是政府所在地，蘇克雷是憲法首都
+        { country: "巴拉圭", capital: "亞松森", region: "美洲", confusing_cities: [] },
+        { country: "烏拉圭", capital: "蒙特維多", region: "美洲", confusing_cities: [] },
+        { country: "瓜地馬拉", capital: "瓜地馬拉市", region: "美洲", confusing_cities: [] },
+        { country: "宏都拉斯", capital: "德古西加巴", region: "美洲", confusing_cities: [] },
+        { country: "薩爾瓦多", capital: "聖薩爾瓦多", region: "美洲", confusing_cities: [] },
+        { country: "尼加拉瓜", capital: "馬拿瓜", region: "美洲", confusing_cities: [] },
+        { country: "貝里斯", capital: "貝爾墨邦", region: "美洲", confusing_cities: ["貝里斯市"] }, // 陷阱：舊都貝里斯市
+        { country: "海地", capital: "太子港", region: "美洲", confusing_cities: [] },
+        { country: "多明尼加", capital: "聖多明哥", region: "美洲", confusing_cities: [] },
+        { country: "巴哈馬", capital: "拿索", region: "美洲", confusing_cities: [] },
+        { country: "千里達及托巴哥", capital: "西班牙港", region: "美洲", confusing_cities: [] },
+        { country: "巴貝多", capital: "布里奇敦", region: "美洲", confusing_cities: [] },
+        { country: "蓋亞那", capital: "喬治敦", region: "美洲", confusing_cities: [] },
+        { country: "蘇利南", capital: "巴拉馬利波", region: "美洲", confusing_cities: [] },
+
+        // === 大洋洲 ===
+        { country: "澳洲", capital: "坎培拉", region: "大洋洲", confusing_cities: ["雪梨", "墨爾本", "布里斯本", "黃金海岸", "伯斯"] },
+        { country: "紐西蘭", capital: "威靈頓", region: "大洋洲", confusing_cities: ["奧克蘭", "基督城", "皇后鎮"] },
+        { country: "巴布亞紐幾內亞", capital: "莫士比港", region: "大洋洲", confusing_cities: [] },
+        { country: "斐濟", capital: "蘇瓦", region: "大洋洲", confusing_cities: ["楠迪"] },
+        { country: "索羅門群島", capital: "荷尼阿拉", region: "大洋洲", confusing_cities: [] },
+        { country: "萬那杜", capital: "維拉港", region: "大洋洲", confusing_cities: [] },
+        { country: "薩摩亞", capital: "阿皮亞", region: "大洋洲", confusing_cities: [] },
+        { country: "東加", capital: "努瓜婁發", region: "大洋洲", confusing_cities: [] },
+        { country: "帛琉", capital: "恩吉魯穆德", region: "大洋洲", confusing_cities: ["科羅爾"] }, // 科羅爾是舊都和最大城
+        { country: "密克羅尼西亞", capital: "帕利基爾", region: "大洋洲", confusing_cities: [] },
+        { country: "馬紹爾群島", capital: "馬久羅", region: "大洋洲", confusing_cities: [] },
+        { country: "吉里巴斯", capital: "塔拉瓦", region: "大洋洲", confusing_cities: [] },
+        { country: "吐瓦魯", capital: "富納富提", region: "大洋洲", confusing_cities: [] },
+        { country: "諾魯", capital: "亞倫", region: "大洋洲", confusing_cities: [] }, // 諾魯無正式首都，政府位於亞倫
+
+        // === 非洲 ===
+        { country: "埃及", capital: "開羅", region: "非洲", confusing_cities: ["亞歷山大港", "盧克索", "夏姆錫克"] },
+        { country: "南非", capital: "普勒托利亞", region: "非洲", confusing_cities: ["約翰尼斯堡", "開普敦", "德班"] },
+        { country: "摩洛哥", capital: "拉巴特", region: "非洲", confusing_cities: ["卡薩布蘭卡", "馬拉喀什", "菲斯"] },
+        { country: "奈及利亞", capital: "阿布賈", region: "非洲", confusing_cities: ["拉哥斯"] }, // 拉哥斯是舊都
+        { country: "肯亞", capital: "奈洛比", region: "非洲", confusing_cities: ["蒙巴薩"] },
+        { country: "衣索比亞", capital: "阿迪斯阿貝巴", region: "非洲", confusing_cities: [] },
+        { country: "阿爾及利亞", capital: "阿爾及爾", region: "非洲", confusing_cities: [] },
+        { country: "突尼西亞", capital: "突尼斯", region: "非洲", confusing_cities: [] },
+        { country: "迦納", capital: "阿克拉", region: "非洲", confusing_cities: [] },
+        { country: "象牙海岸", capital: "雅穆索戈", region: "非洲", confusing_cities: ["阿必尚"] }, // 阿必尚是最大城與經濟首都
+        { country: "坦尚尼亞", capital: "杜篤瑪", region: "非洲", confusing_cities: ["三蘭港"] }, // 三蘭港是舊都
+        { country: "烏干達", capital: "坎帕拉", region: "非洲", confusing_cities: [] },
+        { country: "塞內加爾", capital: "達喀爾", region: "非洲", confusing_cities: [] },
+        { country: "馬達加斯加", capital: "安塔那那利佛", region: "非洲", confusing_cities: [] },
+        { country: "蘇丹", capital: "喀土穆", region: "非洲", confusing_cities: [] },
+        { country: "剛果民主共和國", capital: "金夏沙", region: "非洲", confusing_cities: [] },
+        { country: "安哥拉", capital: "羅安達", region: "非洲", confusing_cities: [] },
+        { country: "喀麥隆", capital: "雅溫德", region: "非洲", confusing_cities: ["杜阿拉"] },
+        { country: "辛巴威", capital: "哈拉雷", region: "非洲", confusing_cities: [] },
+        { country: "尚比亞", capital: "路沙卡", region: "非洲", confusing_cities: [] },
+        { country: "納米比亞", capital: "溫荷克", region: "非洲", confusing_cities: [] },
+        { country: "波札那", capital: "嘉柏隆里", region: "非洲", confusing_cities: [] },
+        { country: "莫三比克", capital: "馬布多", region: "非洲", confusing_cities: [] },
+        { country: "利比亞", capital: "的黎波里", region: "非洲", confusing_cities: ["班加西"] },
+        { country: "馬利", capital: "巴馬科", region: "非洲", confusing_cities: [] },
+        { country: "盧安達", capital: "基加利", region: "非洲", confusing_cities: [] },
+        { country: "索馬利亞", capital: "摩加迪休", region: "非洲", confusing_cities: [] },
+        { country: "茅利塔尼亞", capital: "諾克少", region: "非洲", confusing_cities: [] },
+        { country: "布吉納法索", capital: "瓦加杜古", region: "非洲", confusing_cities: [] },
+        { country: "幾內亞", capital: "柯那克里", region: "非洲", confusing_cities: [] },
+        { country: "查德", capital: "恩傑納", region: "非洲", confusing_cities: [] },
+        { country: "尼日", capital: "尼阿美", region: "非洲", confusing_cities: [] },
+        { country: "貝南", capital: "波多諾伏", region: "非洲", confusing_cities: ["科托努"] }, // 科托努是政府所在地
+        { country: "多哥", capital: "洛美", region: "非洲", confusing_cities: [] },
+        { country: "獅子山", capital: "弗里敦", region: "非洲", confusing_cities: [] },
+        { country: "賴比瑞亞", capital: "蒙羅維亞", region: "非洲", confusing_cities: [] },
+        { country: "中非共和國", capital: "班基", region: "非洲", confusing_cities: [] },
+        { country: "加彭", capital: "利伯維爾", region: "非洲", confusing_cities: [] },
+        { country: "剛果共和國", capital: "布拉薩市", region: "非洲", confusing_cities: [] },
+        { country: "赤道幾內亞", capital: "馬拉博", region: "非洲", confusing_cities: [] },
+        { country: "厄利垂亞", capital: "阿斯馬拉", region: "非洲", confusing_cities: [] },
+        { country: "吉布地", capital: "吉布地市", region: "非洲", confusing_cities: [] },
+        { country: "甘比亞", capital: "班珠爾", region: "非洲", confusing_cities: [] },
+        { country: "幾內亞比索", capital: "比索", region: "非洲", confusing_cities: [] },
+        { country: "維德角", capital: "普拉亞", region: "非洲", confusing_cities: [] },
+        { country: "模里西斯", capital: "路易士港", region: "非洲", confusing_cities: [] },
+        { country: "塞席爾", capital: "維多利亞", region: "非洲", confusing_cities: [] },
+        { country: "葛摩", capital: "莫洛尼", region: "非洲", confusing_cities: [] },
+        { country: "聖多美普林西比", capital: "聖多美", region: "非洲", confusing_cities: [] },
+        { country: "史瓦帝尼", capital: "墨巴本", region: "非洲", confusing_cities: [] },
+        { country: "賴索托", capital: "馬塞魯", region: "非洲", confusing_cities: [] },
+        { country: "馬拉威", capital: "里朗威", region: "非洲", confusing_cities: [] },
+        { country: "蒲隆地", capital: "基特加", region: "非洲", confusing_cities: ["布松布拉"] }, // 2019遷都
+        { country: "南蘇丹", capital: "朱巴", region: "非洲", confusing_cities: [] }
+    ];
+
+    // --- Helper Functions ---
+    function getStatusClass(region) {
+        if (region === "亞洲") return "reg-asia";
+        if (region === "歐洲") return "reg-europe";
+        if (region === "美洲") return "reg-americas";
+        if (region === "大洋洲") return "reg-oceania";
+        if (region === "非洲") return "reg-africa";
+        return "reg-other";
+    }
+
+    const getWikiData = async (query) => {
+        try {
+            // 維基百科 API
+            const res = await fetch(`https://zh.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`);
+            if(!res.ok) throw new Error();
+            return await res.json();
+        } catch(e) { return null; }
+    };
+
+    // --- Init ---
+    document.addEventListener('DOMContentLoaded', () => {
+        renderGuide();
+        document.getElementById('db-count').innerText = countries.length;
+        loadDailyCountryData();
+    });
+
+    // --- Navigation ---
+    function setTab(tab, btn) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`sec-${tab}`).classList.add('active');
+        btn.classList.add('active');
+        window.scrollTo(0,0);
+        if(tab !== 'quiz') quitQuiz();
+    }
+
+    // --- Guide ---
+    let currentFilter = 'all';
+    function renderGuide() {
+        const grid = document.getElementById('guide-grid');
+        grid.innerHTML = '';
+        const term = document.getElementById('search-input').value.toLowerCase();
+        
+        const list = countries.filter(c => {
+            const matchCat = currentFilter === 'all' || c.region === currentFilter;
+            const matchSearch = c.country.toLowerCase().includes(term) || c.capital.toLowerCase().includes(term);
+            return matchCat && matchSearch;
+        });
+
+        if(list.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#999; padding:20px;">找不到相關國家</div>';
+            return;
+        }
+
+        list.forEach(c => {
+            const el = document.createElement('div');
+            el.className = 'plant-card';
+            el.innerHTML = `
+                <div class="p-name">${c.country}</div>
+                <div class="p-cat">${c.capital}</div>
+                <div class="status-badge ${getStatusClass(c.region)}">${c.region}</div>
+            `;
+            el.onclick = () => openModal(c);
+            grid.appendChild(el);
+        });
+    }
+
+    function setFilter(cat, btn) {
+        currentFilter = cat;
+        document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        renderGuide();
+    }
+
+    // --- Daily ---
+    let isDailyFlipped = false;
+    let currentDailyCountry = null;
+
+    function flipDailyCard() {
+        if (isDailyFlipped) return;
+        document.getElementById('daily-card-inner').classList.add('is-flipped');
+        isDailyFlipped = true;
+    }
+
+    async function loadDailyCountryData() {
+        const todayStr = new Date().toDateString();
+        document.getElementById('daily-date-display').innerText = todayStr;
+        
+        // Pseudo-random based on date
+        let hash = 0;
+        for (let i = 0; i < todayStr.length; i++) hash = todayStr.charCodeAt(i) + ((hash << 5) - hash);
+        const index = Math.abs(hash) % countries.length;
+        const country = countries[index];
+        currentDailyCountry = country;
+
+        document.getElementById('daily-name').innerText = country.country;
+        document.getElementById('daily-capital').innerText = country.capital;
+        const badge = document.getElementById('daily-region');
+        badge.innerText = country.region;
+        badge.className = `status-badge ${getStatusClass(country.region)}`;
+
+        // Fetch Data
+        const data = await getWikiData(country.country);
+        const img = document.getElementById('daily-img');
+        const loader = document.getElementById('daily-loader');
+        
+        if(data) {
+            document.getElementById('daily-desc').innerText = data.extract ? (data.extract.substring(0, 80) + "...") : "暫無簡介";
+            const src = data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null);
+            if(src) {
+                img.src = src;
+                img.onload = () => { loader.style.display='none'; };
+            } else {
+                loader.style.display='none'; img.alt = "No Image Available";
+            }
+        } else {
+            loader.style.display='none';
+            document.getElementById('daily-desc').innerText = "無法載入資料";
+        }
+    }
+
+    // --- Modal ---
+    async function openModal(country) {
+        if(!country) return;
+        const modal = document.getElementById('modal');
+        const img = document.getElementById('m-img');
+        const loader = document.getElementById('m-loader');
+        const err = document.getElementById('m-err');
+
+        modal.style.display = 'flex';
+        img.style.display = 'none';
+        loader.style.display = 'block';
+        err.style.display = 'none';
+
+        document.getElementById('m-name').innerText = country.country;
+        document.getElementById('m-capital').innerText = country.capital;
+        document.getElementById('m-desc').innerText = "讀取中...";
+        document.getElementById('m-wiki').href = `https://zh.wikipedia.org/wiki/${country.country}`;
+        
+        const badge = document.getElementById('m-region');
+        badge.innerText = country.region;
+        badge.className = `status-badge ${getStatusClass(country.region)}`;
+
+        const data = await getWikiData(country.country);
+        if(data) {
+            document.getElementById('m-desc').innerText = data.extract || "無詳細資料";
+            const src = data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null);
+            if(src) {
+                img.src = src;
+                img.onload = () => { loader.style.display='none'; img.style.display='block'; };
+            } else {
+                loader.style.display='none'; err.style.display='block';
+            }
+        } else {
+            loader.style.display='none';
+            document.getElementById('m-desc').innerText = "資料讀取失敗";
+        }
+    }
+
+    function closeModal(e) {
+        if(!e || e.target.id === 'modal') document.getElementById('modal').style.display = 'none';
+    }
+
+    // --- Quiz ---
+    let gameState = { queue: [], idx: 0, score: 0, answering: false };
+
+    function startQuiz() {
+        const shuffled = [...countries].sort(() => Math.random() - 0.5);
+        gameState = { queue: shuffled.slice(0, 10), idx: 0, score: 0, answering: false };
+        
+        document.getElementById('quiz-menu').style.display = 'none';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-play').style.display = 'block';
+        document.getElementById('q-score').innerText = 0;
+        
+        loadQuestion();
+    }
+
+    async function loadQuestion() {
+        if(gameState.idx >= 10) { finishQuiz(); return; }
+        
+        const q = gameState.queue[gameState.idx];
+        gameState.answering = true;
+
+        document.getElementById('q-progress').innerText = `${gameState.idx+1} / 10`;
+        document.getElementById('q-country').innerText = q.country;
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('feedback').innerText = '';
+        
+        const img = document.getElementById('q-img');
+        const loader = document.getElementById('v-loader');
+        img.style.display = 'none';
+        loader.style.display = 'block';
+
+        // Load image
+        getWikiData(q.country).then(data => {
+            const src = data && (data.originalimage ? data.originalimage.source : (data.thumbnail ? data.thumbnail.source : null));
+            if(src) {
+                img.src = src;
+                img.onload = () => { loader.style.display='none'; img.style.display='block'; };
+            } else {
+                loader.style.display='none';
+            }
+        });
+
+        // Options Logic
+        let opts = [];
+        opts.push({ text: q.capital, correct: true }); // 正解
+
+        // 誘答選項
+        let distractors = [...(q.confusing_cities || [])]; // 先加入該國的混淆城市
+        
+        // 若不足3個，隨機從其他國家首都補充
+        const others = countries.filter(c => c.country !== q.country).sort(() => Math.random()-0.5);
+        for(let o of others) {
+            if(distractors.length >= 3) break;
+            if(!distractors.includes(o.capital)) distractors.push(o.capital);
+        }
+        
+        // 取前三個並打亂
+        distractors = distractors.slice(0, 3);
+        distractors.forEach(d => opts.push({ text: d, correct: false }));
+        opts.sort(() => Math.random() - 0.5);
+
+        document.getElementById('opt-container').innerHTML = opts.map(o => 
+            `<button class="opt-btn" onclick="checkAnswer(this, ${o.correct}, '${q.capital}')">${o.text}</button>`
+        ).join('');
+    }
+
+    function checkAnswer(btn, isCorrect, ans) {
+        if(!gameState.answering) return;
+        gameState.answering = false;
+
+        if(isCorrect) {
+            btn.classList.add('correct');
+            document.getElementById('feedback').innerText = "⭕ 答對了！";
+            document.getElementById('feedback').style.color = "var(--primary)";
+            gameState.score += 10;
+        } else {
+            btn.classList.add('wrong');
+            document.getElementById('feedback').innerText = `❌ 正確答案：${ans}`;
+            document.getElementById('feedback').style.color = "#d32f2f";
+            // Show correct one
+            document.querySelectorAll('.opt-btn').forEach(b => {
+                if(b.innerText === ans) b.classList.add('correct');
+            });
+        }
+        document.getElementById('q-score').innerText = gameState.score;
+        document.getElementById('next-btn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        gameState.idx++;
+        loadQuestion();
+    }
+
+    function finishQuiz() {
+        document.getElementById('quiz-play').style.display = 'none';
+        document.getElementById('quiz-result').style.display = 'block';
+        document.getElementById('final-score').innerText = gameState.score;
+        
+        let r = "🌱 地理新手";
+        if(gameState.score === 100) r = "🌍 世界地理之神";
+        else if(gameState.score >= 80) r = "🗺️ 環球旅行家";
+        else if(gameState.score >= 60) r = "✈️ 飛行常客";
+        
+        document.getElementById('final-rank').innerText = r;
+    }
+
+    function quitQuiz() {
+        document.getElementById('quiz-play').style.display = 'none';
+        document.getElementById('quiz-result').style.display = 'none';
+        document.getElementById('quiz-menu').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
