@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>世界首都大挑戰 (全球完整版)</title>
+    <title>世界首都大挑戰</title>
     <style>
         :root {
             /* 地理/地球風格配色 */
@@ -350,6 +350,7 @@
     // confusing_cities 陣列為「非首都但易混淆的大城市」，用於生成誘答選項。
     const countries = [
         // === 亞洲 ===
+        { country: "中華民國", capital: "台北", region: "亞洲", confusing_cities: ["高雄", "台中", "台南", "新竹"] },
         { country: "日本", capital: "東京", region: "亞洲", confusing_cities: ["大阪", "京都", "橫濱"] },
         { country: "中國", capital: "北京", region: "亞洲", confusing_cities: ["上海", "廣州", "深圳", "香港"] },
         { country: "南韓", capital: "首爾", region: "亞洲", confusing_cities: ["釜山", "仁川", "大邱"] },
